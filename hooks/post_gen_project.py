@@ -134,11 +134,11 @@ def commit_to_git(url: str, folder: str | pathlib.Path) -> None:
         folder: path of repository folder.
 
     """
-    name, password = get_github_login()
+    # name, password = get_github_login()
     repo = "{{ cookiecutter.repo_name }}"
     public = 'public' if "{{ cookiecutter.public_repository }}".lower() in _TRUES else "private"
     git_commands = [
-        ['echo', password, '|', 'gh', 'auth', 'login', '--with-token'],
+        # ['echo', password, '|', 'gh', 'auth', 'login', '--with-token'],
         ['git', 'ls-remote', '-h', url, '&>', '/dev/null'],
         ['git', 'init'],
         # ['git', 'checkout', '-b', 'main'],
