@@ -1,0 +1,68 @@
+# Automatically performs jobs on a commit push
+
+# If the commit message matches a semantic version (e.g. "v0.1.2"), a GitHub
+# release will be created by the `create_github_release` job.
+
+name: ci
+
+on:
+  # Allows this Action to be called by a push to the `main` branch
+  push:
+    branches:
+      - main
+  # Allows this Action to be called by other Actions
+  workflow_call:
+  # Allows this Action to be called through GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+
+  build_and_deploy_documentation:
+    name: Build and Deploy Docs
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout repository
+      uses: actions/checkout@v4
+
+    - name: install python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "latest"
+        activate-environment: true
+
+    - name: install dependencies
+      run: uv sync
+
+    - name: build documentation with mkdocs
+      run: uv run mkdocs build
+
+    - name: deploy documentation to GitHub Pages
+      run: uv run mkdocs gh-deploy --force --clean --verbose
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+
+  # Only triggered if the commit message matches the semantic version format
+  # (e.g. "v0.1.2").
+  create_github_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Initiate GitHub Release
+      uses: CupOfTea696/gh-action-auto-release@v1.0.2
+      with:
+        title: "Release: $version"
+        tag: "v$semver"
+        regex: "/^v#{semver}$/i"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
